@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AadivyaGPT</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'chat-bg': '#343541',
+                        'sidebar-bg': '#202123', 
+                        'message-bg': '#444654',
+                        'border-color': '#4d4d4f',
+                        'input-bg': '#40414f',
+                        'text-secondary': '#8e8ea0',
+                        'accent-green': '#19c37d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-chat-bg text-white h-screen overflow-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        function Sidebar() {
+            const [chatHistory] = useState([
+                { id: 1, title: 'About Aadivya', active: true },
+                { id: 2, title: 'Technical Skills Discussion', active: false },
+                { id: 3, title: 'Current Projects', active: false }
+            ]);
+
+            return (
+                <div className="w-64 bg-sidebar-bg border-r border-border-color flex flex-col">
+                    <div className="p-4 border-b border-border-color">
+                        <button className="w-full p-3 bg-transparent border border-border-color rounded-md text-white text-sm hover:bg-gray-700 transition-colors">
+                            + New chat
+                        </button>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto p-2">
+                        {chatHistory.map((chat) => (
+                            <div
+                                key={chat.id}
+                                className={`p-3 mx-1 my-1 rounded-md text-sm cursor-pointer transition-colors ${
+                                    chat.active 
+                                        ? 'bg-chat-bg' 
+                                        : 'hover:bg-gray-700'
+                                }`}
+                            >
+                                <span className="truncate block">{chat.title}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        function Chat({ messages, isLoading }) {
+            const messagesEndRef = useRef(null);
+
+            const scrollToBottom = () => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            };
+
+            useEffect(() => {
+                scrollToBottom();
+            }, [messages, isLoading]);
+
+            const renderContent = (content) => {
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                return content.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-accent-green underline hover:text-green-400">$1</a>');
+            };
+
+            return (
+                <div className="flex-1 overflow-y-auto">
+                    <div className="max-w-3xl mx-auto px-4 py-6">
+                        {messages.map((message) => (
+                            <div
+                                key={message.id}
+                                className={`mb-6 flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <div className={`flex items-start max-w-[70%] ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
+                                    <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${
+                                        message.type === 'assistant' 
+                                            ? 'bg-accent-green text-white mr-3' 
+                                            : 'bg-blue-600 text-white ml-3'
+                                    }`}>
+                                        {message.type === 'assistant' ? 'AG' : 'U'}
+                                    </div>
+                                    
+                                    <div className={`px-4 py-3 rounded-lg ${
+                                        message.type === 'user' 
+                                            ? 'bg-blue-600 text-white' 
+                                            : 'bg-message-bg text-white'
+                                    }`}>
+                                        <div 
+                                            dangerouslySetInnerHTML={{ 
+                                                __html: renderContent(message.content) 
+                                            }} 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        
+                        {isLoading && (
+                            <div className="mb-6 flex justify-start">
+                                <div className="flex items-start">
+                                    <div className="w-8 h-8 rounded-full bg-accent-green text-white mr-3 flex-shrink-0 flex items-center justify-center text-xs font-bold">
+                                        AG
+                                    </div>
+                                    <div className="bg-message-bg px-4 py-3 rounded-lg">
+                                        <div className="flex items-center space-x-1">
+                                            <div className="flex space-x-1">
+                                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div ref={messagesEndRef} />
+                    </div>
+                </div>
+            );
+        }
+
+        function InputSection({ onSendMessage }) {
+            const [input, setInput] = useState('');
+
+            const suggestions = [
+                "What is Aadivya working on right now?",
+                "Where does Aadivya study?",
+                "What are Aadivya's current projects?",
+                "Tell me about Aadivya's research interests",
+                "What startups is Aadivya involved with?",
+                "How can I contact Aadivya?"
+            ];
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (input.trim()) {
+                    onSendMessage(input.trim());
+                    setInput('');
+                }
+            };
+
+            const handleSuggestionClick = (suggestion) => {
+                onSendMessage(suggestion);
+            };
+
+            const handleKeyDown = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                }
+            };
+
+            return (
+                <div className="border-t border-border-color bg-chat-bg p-4">
+                    <div className="max-w-3xl mx-auto">
+                        <div className="mb-4 flex flex-wrap gap-2 justify-center">
+                            {suggestions.map((suggestion, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => handleSuggestionClick(suggestion)}
+                                    className="px-3 py-2 bg-transparent border border-border-color rounded-full text-sm text-white hover:bg-input-bg transition-colors"
+                                >
+                                    {suggestion}
+                                </button>
+                            ))}
+                        </div>
+                        
+                        <form onSubmit={handleSubmit} className="relative">
+                            <div className="flex items-end bg-input-bg border border-border-color rounded-xl p-3">
+                                <textarea
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder="Message AadivyaGPT..."
+                                    className="flex-1 bg-transparent text-white placeholder-text-secondary resize-none outline-none min-h-[24px] max-h-48"
+                                    rows={1}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={!input.trim()}
+                                    className="ml-3 p-2 bg-accent-green hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-md transition-colors"
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
+                                        <path d="m12 2 3 3m-3-3-3 3m3-3v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [messages, setMessages] = useState([
+                {
+                    id: 1,
+                    type: 'assistant',
+                    content: "Hey! This is Aadivya's personal website. Aadivya is an entrepreneur, researcher and student interested in AI research and startups. Feel free to ask me anything about him!",
+                    timestamp: new Date()
+                }
+            ]);
+            
+            const [isLoading, setIsLoading] = useState(false);
+
+            const handleSendMessage = async (content) => {
+                const userMessage = {
+                    id: Date.now(),
+                    type: 'user',
+                    content,
+                    timestamp: new Date()
+                };
+                
+                setMessages(prev => [...prev, userMessage]);
+                setIsLoading(true);
+                
+                setTimeout(() => {
+                    const assistantMessage = {
+                        id: Date.now() + 1,
+                        type: 'assistant',
+                        content: `I received your message: "${content}". This is a placeholder response while I work on implementing the RAG functionality with Aadivya's profile data.`,
+                        timestamp: new Date()
+                    };
+                    setMessages(prev => [...prev, assistantMessage]);
+                    setIsLoading(false);
+                }, 1000);
+            };
+
+            return (
+                <div className="flex h-screen bg-chat-bg text-white">
+                    <Sidebar />
+                    <div className="flex-1 flex flex-col">
+                        <Chat messages={messages} isLoading={isLoading} />
+                        <InputSection onSendMessage={handleSendMessage} />
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
