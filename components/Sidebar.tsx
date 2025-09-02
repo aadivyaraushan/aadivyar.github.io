@@ -1,9 +1,16 @@
 import React from 'react';
 
+interface Message {
+  id: number;
+  type: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
 interface Chat {
   id: number;
   title: string;
-  messages: any[];
+  messages: Message[];
 }
 
 interface SidebarProps {
