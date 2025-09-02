@@ -1,7 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 
-function Chat({ messages, isLoading }) {
-  const messagesEndRef = useRef(null);
+interface Message {
+  id: number;
+  type: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+interface ChatProps {
+  messages: Message[];
+  isLoading: boolean;
+}
+
+function Chat({ messages, isLoading }: ChatProps) {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -11,23 +23,17 @@ function Chat({ messages, isLoading }) {
     scrollToBottom();
   }, [messages, isLoading]);
 
-  const renderContent = (content) => {
+  const renderContent = (content: string) => {
     if (typeof content !== 'string') {
       content = String(content);
     }
     
-    // Convert markdown-style formatting to HTML
     let formatted = content
-      // Bold text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      // Bullet points
       .replace(/^\* (.*$)/gm, '<li>$1</li>')
-      // Line breaks
       .replace(/\n/g, '<br>')
-      // URLs
       .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-y2k-blue underline hover:text-y2k-accent">$1</a>');
     
-    // Wrap consecutive <li> elements in <ul>
     formatted = formatted.replace(/(<li>.*?<\/li>(?:<br>)*)+/g, (match) => {
       const cleanMatch = match.replace(/<br>/g, '');
       return `<ul class="list-disc list-inside space-y-1 my-2">${cleanMatch}</ul>`;

@@ -1,7 +1,19 @@
 import React from 'react';
 
-function Sidebar({ chats, currentChatId, onNewChat, onChatSelect }) {
+interface Chat {
+  id: number;
+  title: string;
+  messages: any[];
+}
 
+interface SidebarProps {
+  chats: Chat[];
+  currentChatId: number;
+  onNewChat: () => void;
+  onChatSelect: (chatId: number) => void;
+}
+
+function Sidebar({ chats, currentChatId, onNewChat, onChatSelect }: SidebarProps) {
   return (
     <div className="w-64 bg-y2k-surface border-r-2 border-y2k-border flex flex-col">
       <div className="bg-y2k-silver p-2 border-b-2 border-y2k-darkgray">

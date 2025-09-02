@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 
-function InputSection({ onSendMessage }) {
+interface InputSectionProps {
+  onSendMessage: (message: string) => void;
+}
+
+function InputSection({ onSendMessage }: InputSectionProps) {
   const [input, setInput] = useState('');
 
   const suggestions = [
@@ -12,7 +16,7 @@ function InputSection({ onSendMessage }) {
     "How can I contact Aadivya?"
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
       onSendMessage(input.trim());
@@ -20,14 +24,14 @@ function InputSection({ onSendMessage }) {
     }
   };
 
-  const handleSuggestionClick = (suggestion) => {
+  const handleSuggestionClick = (suggestion: string) => {
     onSendMessage(suggestion);
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e);
+      handleSubmit(e as any);
     }
   };
 

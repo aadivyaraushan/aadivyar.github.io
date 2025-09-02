@@ -1,13 +1,10 @@
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-console.log('OpenAI API Key loaded:', !!process.env.REACT_APP_OPENAI_API_KEY);
 const openai = new OpenAI({
-  apiKey: process.env.REACT_APP_OPENAI_API_KEY,
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
   dangerouslyAllowBrowser: true,
 });
 
-// Structured data from resume and profile
 const aadivyaData = {
   personal: {
     name: 'Aadivya Raushan',
@@ -106,18 +103,15 @@ const aadivyaData = {
   ],
 };
 
-// Initialize (nothing to do now)
 export async function initializeVectorRAG() {
   console.log('RAG initialized with structured data');
 }
 
-// No search needed - just return the full context
-export async function retrieveRelevantChunks(query, topK = 5) {
+export async function retrieveRelevantChunks(query: string, topK = 5) {
   return [JSON.stringify(aadivyaData, null, 2)];
 }
 
-// Generate response using full context every time
-export async function generateRAGResponse(query, retrievedChunks) {
+export async function generateRAGResponse(query: string, retrievedChunks: string[]) {
   try {
     const fullContext = JSON.stringify(aadivyaData, null, 2);
 
@@ -149,11 +143,11 @@ Always be specific, factual, and use * for bullet points when listing multiple i
         },
         { role: 'user', content: prompt },
       ],
-      model: 'gpt-5-mini',
-      max_completion_tokens: 3000,
+      model: 'gpt-4o-mini',
+      max_tokens: 3000,
     });
 
-    return response.choices[0].message.content;
+    return response.choices[0].message.content || 'Sorry, I encountered an error processing your question.';
   } catch (error) {
     console.error('OpenAI chat completion failed:', error);
     return 'Sorry, I encountered an error processing your question.';

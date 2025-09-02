@@ -1,12 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import Sidebar from './components/Sidebar';
-import Chat from './components/Chat';
-import InputSection from './components/InputSection';
-import { initializeVectorRAG, retrieveRelevantChunks, generateRAGResponse } from './knowledge/vectorRAG';
+'use client';
 
-function App() {
+import React, { useState, useEffect } from 'react';
+import Sidebar from '../../components/Sidebar';
+import Chat from '../../components/Chat';
+import InputSection from '../../components/InputSection';
+import { initializeVectorRAG, retrieveRelevantChunks, generateRAGResponse } from '../../lib/vectorRAG';
+
+interface Message {
+  id: number;
+  type: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+interface ChatData {
+  id: number;
+  title: string;
+  messages: Message[];
+}
+
+interface Chats {
+  [key: number]: ChatData;
+}
+
+export default function Home() {
   const [currentChatId, setCurrentChatId] = useState(1);
-  const [chats, setChats] = useState({
+  const [chats, setChats] = useState<Chats>({
     1: {
       id: 1,
       title: 'About Aadivya',
@@ -26,20 +45,18 @@ function App() {
   const currentChat = chats[currentChatId];
   const messages = currentChat ? currentChat.messages : [];
 
-  // Initialize vector RAG on app start
   useEffect(() => {
     initializeVectorRAG();
   }, []);
 
-  const handleSendMessage = async (content) => {
-    const userMessage = {
+  const handleSendMessage = async (content: string) => {
+    const userMessage: Message = {
       id: Date.now(),
       type: 'user',
       content,
       timestamp: new Date()
     };
     
-    // Update chat title if this is the first user message
     if (currentChat.messages.length === 1 && currentChat.title === 'New Chat') {
       updateChatTitle(currentChatId, content);
     }
@@ -53,14 +70,12 @@ function App() {
     }));
     setIsLoading(true);
     
-    // Use vector RAG for response generation
     const generateResponse = async () => {
       try {
-        // Retrieve relevant chunks using vector similarity
         const relevantChunks = await retrieveRelevantChunks(content, 3);
         const response = await generateRAGResponse(content, relevantChunks);
         
-        const assistantMessage = {
+        const assistantMessage: Message = {
           id: Date.now() + 1,
           type: 'assistant',
           content: response,
@@ -77,7 +92,7 @@ function App() {
         setIsLoading(false);
       } catch (error) {
         console.error('RAG error:', error);
-        const errorMessage = {
+        const errorMessage: Message = {
           id: Date.now() + 1,
           type: 'assistant',
           content: "Sorry, I encountered an error processing your question. Please try again!",
@@ -94,13 +109,12 @@ function App() {
       }
     };
     
-    // Add realistic delay
     setTimeout(generateResponse, Math.random() * 1000 + 500);
   };
 
   const handleNewChat = () => {
     const newChatId = Date.now();
-    const newChat = {
+    const newChat: ChatData = {
       id: newChatId,
       title: 'New Chat',
       messages: [
@@ -120,11 +134,11 @@ function App() {
     setCurrentChatId(newChatId);
   };
 
-  const handleChatSelect = (chatId) => {
+  const handleChatSelect = (chatId: number) => {
     setCurrentChatId(chatId);
   };
 
-  const updateChatTitle = (chatId, firstUserMessage) => {
+  const updateChatTitle = (chatId: number, firstUserMessage: string) => {
     const title = firstUserMessage.length > 25 ? 
       firstUserMessage.substring(0, 25) + '...' : 
       firstUserMessage;
@@ -170,5 +184,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
